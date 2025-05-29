@@ -7,6 +7,7 @@
 ### 🎉 New features
 
 - Add fullscreen orientation and auto-exit functionality. ([#36910](https://github.com/expo/expo/pull/36910) by [@behenate](https://github.com/behenate))
+- [Android][iOS] Add `keepScreenOnWhilePlaying` property to the player.
 
 ### 🐛 Bug fixes
 
@@ -16,6 +17,7 @@
 ### 💡 Others
 
 - Export types using the `export type` syntax. ([#37396](https://github.com/expo/expo/pull/37396) by [@behenate](https://github.com/behenate))
+- [Android] Keep the screen on while playback is running by default.
 
 ## 2.2.2 - 2025-06-18
 
