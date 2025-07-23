@@ -48,10 +48,10 @@ export default function Layout() {
             <Icon
               src={require('../../../assets/explore_gray.png')}
               selectedSrc={require('../../../assets/explore_orange.png')}
-              drawable="ic_explore"
+              drawable="ic_search"
             />
             <Badge>9+</Badge>
-            <Label>Discover</Label>
+            <Label>Explore</Label>
           </NativeTabs.Trigger>
           {activeTabs.map((tab) => (
             <NativeTabs.Trigger key={tab} name={tab}>

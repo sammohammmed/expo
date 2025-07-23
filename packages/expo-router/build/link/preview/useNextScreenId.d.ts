@@ -1,3 +1,10 @@
 import { Href } from '../../types';
-export declare function useNextScreenId(): [string | undefined, (href: Href) => void];
+import { TabPath } from './native';
+export declare function useNextScreenId(): [
+    {
+        nextScreenId: string | undefined;
+        tabPath: TabPath[];
+    },
+    (href: Href) => void
+];
 //# sourceMappingURL=useNextScreenId.d.ts.map

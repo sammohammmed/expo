@@ -12,6 +12,7 @@ function useNextScreenId() {
     const { setOpenPreviewKey } = (0, LinkPreviewContext_1.useLinkPreviewContext)();
     const [internalNextScreenId, internalSetNextScreenId] = (0, react_1.useState)();
     const currentHref = (0, react_1.useRef)(undefined);
+    const [tabPath, setTabPath] = (0, react_1.useState)([]);
     (0, react_1.useEffect)(() => {
         // When screen is prefetched, then the root state is updated with the preloaded route.
         return router_store_1.store.navigationRef.addListener('state', () => {
@@ -19,12 +20,16 @@ function useNextScreenId() {
             if (currentHref.current) {
                 const preloadedRoute = getPreloadedRouteFromRootStateByHref(currentHref.current);
                 const routeKey = preloadedRoute?.key;
+                const tabPathFromRootState = getTabPathFromRootStateByHref(currentHref.current);
                 // Without this timeout react-native does not have enough time to mount the new screen
                 // and thus it will not be found on the native side
-                if (routeKey) {
+                if (routeKey || tabPathFromRootState.length) {
                     setTimeout(() => {
                         internalSetNextScreenId(routeKey);
                         setOpenPreviewKey(routeKey);
+                        setTabPath(tabPathFromRootState);
+                        console.log('preloadedRoute', preloadedRoute);
+                        console.log('tabPathFromRootState', tabPathFromRootState);
                     });
                     // We found the preloaded route, so we can reset the currentHref
                     // to prevent unnecessary processing
@@ -39,7 +44,34 @@ function useNextScreenId() {
         router.prefetch(href);
         currentHref.current = href;
     }, [router.prefetch]);
-    return [internalNextScreenId, prefetch];
+    return [{ nextScreenId: internalNextScreenId, tabPath }, prefetch];
+}
+function getTabPathFromRootStateByHref(href) {
+    const rootState = router_store_1.store.state;
+    const hrefState = router_store_1.store.getStateForHref((0, href_1.resolveHref)(href));
+    const state = rootState;
+    if (!hrefState || !state) {
+        return [];
+    }
+    // Replicating the logic from `linkTo`
+    const { navigationRoutes } = (0, routing_1.findDivergentState)(hrefState, state, 'PRELOAD');
+    if (!navigationRoutes.length) {
+        return [];
+    }
+    const tabPath = [];
+    navigationRoutes.forEach((route, i, arr) => {
+        if (route.state?.type === 'tab') {
+            const tabState = route.state;
+            const oldTabKey = tabState.routes[tabState.index].key;
+            if (!arr[i + 1]) {
+                throw new Error(`New tab route is missing for ${route.key}. This is likely an internal Expo Router bug.`);
+            }
+            const newTabKey = arr[i + 1].key;
+            tabPath.push({ oldTabKey, newTabKey });
+        }
+    });
+    console.log(tabPath, 'tabPath');
+    return tabPath;
 }
 function getPreloadedRouteFromRootStateByHref(href) {
     const rootState = router_store_1.store.state;
@@ -49,7 +81,7 @@ function getPreloadedRouteFromRootStateByHref(href) {
         return undefined;
     }
     // Replicating the logic from `linkTo`
-    const { navigationState, actionStateRoute } = (0, routing_1.findDivergentState)(hrefState, state);
+    const { navigationState, actionStateRoute } = (0, routing_1.findDivergentState)(hrefState, state, 'PRELOAD');
     if (!navigationState || !actionStateRoute) {
         return undefined;
     }
