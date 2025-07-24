@@ -19,16 +19,62 @@ const validPlatforms = new Set(['android', 'ios', 'native', 'web']);
  *      - If multiple routes have the same name, the most specific route is used
  */
 function getRoutes(contextModule, options) {
+    const middleware = getMiddleware(contextModule, options);
     const directoryTree = getDirectoryTree(contextModule, options);
     // If there are no routes
     if (!directoryTree) {
         return null;
     }
     const rootNode = flattenDirectoryTreeToRoutes(directoryTree, options);
+    if (middleware) {
+        rootNode.middleware = middleware;
+    }
     if (!options.ignoreEntryPoints) {
         crawlAndAppendInitialRoutesAndEntryFiles(rootNode, options);
     }
     return rootNode;
+}
+/**
+ * Given a RequireContext, return the middleware node if one is found. If more than one middleware file is found, an error is thrown.
+ */
+function getMiddleware(contextModule, options) {
+    const isValidMiddleware = (key) => /^\.\/\+middleware\.[tj]sx?$/.test(key);
+    const allMiddlewareFiles = contextModule.keys().filter((key) => key.includes('+middleware'));
+    const rootMiddlewareFiles = allMiddlewareFiles.filter(isValidMiddleware);
+    const nonRootMiddleware = allMiddlewareFiles.filter((file) => !rootMiddlewareFiles.includes(file));
+    if (nonRootMiddleware.length > 0) {
+        throw new Error(`The middleware file can only be placed at the root level. Remove the following files: ${nonRootMiddleware.join(', ')}`);
+    }
+    if (rootMiddlewareFiles.length === 0) {
+        return null;
+    }
+    // In development, throw an error if there are multiple root-level middleware files
+    if (rootMiddlewareFiles.length > 1) {
+        if (process.env.NODE_ENV !== 'production') {
+            throw new Error(`Only one middleware file is allowed. Keep one of the conflicting files: ${rootMiddlewareFiles.map((p) => `"${p}"`).join(' or ')}`);
+        }
+    }
+    const middlewareFilePath = rootMiddlewareFiles[0];
+    const middleware = {
+        loadRoute() {
+            if (options.ignoreRequireErrors) {
+                try {
+                    return contextModule(middlewareFilePath);
+                }
+                catch {
+                    return {};
+                }
+            }
+            else {
+                return contextModule(middlewareFilePath);
+            }
+        },
+        contextKey: middlewareFilePath,
+    };
+    if (options.internal_stripLoadRoute) {
+        delete middleware.loadRoute;
+    }
+    return middleware;
 }
 /**
  * Converts the RequireContext keys (file paths) into a directory tree.
@@ -42,6 +88,8 @@ function getDirectoryTree(contextModule, options) {
     if (!options.preserveApiRoutes) {
         ignoreList.push(/\+api$/, /\+api\.[tj]sx?$/);
     }
+    // Always ignore middleware files in regular route processing
+    ignoreList.push(/\+middleware$/, /\+middleware\.[tj]sx?$/);
     const rootDirectory = {
         files: new Map(),
         subdirectories: new Map(),
