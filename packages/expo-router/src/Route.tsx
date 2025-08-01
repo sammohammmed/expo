@@ -8,14 +8,15 @@ import { type ErrorBoundaryProps } from './views/Try';
 
 export type DynamicConvention = { name: string; deep: boolean; notFound?: boolean };
 
+type Params = Record<string, string | string[]>;
+
 export type LoadedRoute = {
   ErrorBoundary?: ComponentType<ErrorBoundaryProps>;
   default?: ComponentType<any>;
   unstable_settings?: Record<string, any>;
   getNavOptions?: (args: any) => any;
-  generateStaticParams?: (props: {
-    params?: Record<string, string | string[]>;
-  }) => Record<string, string | string[]>[];
+  generateStaticParams?: (props: { params?: Params }) => Params[];
+  loader?: (args: { params: Params; request?: Request }) => Promise<any>;
 };
 
 export type RouteNode = {

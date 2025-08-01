@@ -226,112 +226,165 @@ describe('rewrites', () => {
       type: 'layout',
     });
   });
-});
 
-it('will not duplicate routes for rewrites', () => {
-  expect(
-    getRoutes(
-      inMemoryContext({
-        './(app)/index': () => null,
-        './(app)/[slug]': () => null,
-        'old/[slug]': () => null,
-      }),
-      {
-        internal_stripLoadRoute: true,
-        skipGenerated: true,
-        rewrites: [{ source: 'old/[slug]', destination: '/(app)/[slug]' }],
-        preserveRedirectAndRewrites: true,
-      }
-    )
-  ).toEqual({
-    children: [
-      {
-        children: [],
-        contextKey: './(app)/index.js',
-        dynamic: null,
-        entryPoints: ['expo-router/build/views/Navigator.js', './(app)/index.js'],
-        route: '(app)/index',
-        type: 'route',
-      },
-      {
-        children: [],
-        contextKey: './(app)/[slug].js',
-        dynamic: [
-          {
-            deep: false,
-            name: 'slug',
-          },
-        ],
-        entryPoints: ['expo-router/build/views/Navigator.js', './(app)/[slug].js'],
-        route: '(app)/[slug]',
-        type: 'route',
-      },
-      {
-        children: [],
-        contextKey: './old/[slug].js',
-        dynamic: [
-          {
-            deep: false,
-            name: 'slug',
-          },
-        ],
-        entryPoints: ['expo-router/build/views/Navigator.js', './old/[slug].js'],
-        route: 'old/[slug]',
-        type: 'route',
-      },
-    ],
-    contextKey: 'expo-router/build/views/Navigator.js',
-    dynamic: null,
-    generated: true,
-    route: '',
-    type: 'layout',
+  it('will not duplicate routes for rewrites', () => {
+    expect(
+      getRoutes(
+        inMemoryContext({
+          './(app)/index': () => null,
+          './(app)/[slug]': () => null,
+          'old/[slug]': () => null,
+        }),
+        {
+          internal_stripLoadRoute: true,
+          skipGenerated: true,
+          rewrites: [{ source: 'old/[slug]', destination: '/(app)/[slug]' }],
+          preserveRedirectAndRewrites: true,
+        }
+      )
+    ).toEqual({
+      children: [
+        {
+          children: [],
+          contextKey: './(app)/index.js',
+          dynamic: null,
+          entryPoints: ['expo-router/build/views/Navigator.js', './(app)/index.js'],
+          route: '(app)/index',
+          type: 'route',
+        },
+        {
+          children: [],
+          contextKey: './(app)/[slug].js',
+          dynamic: [
+            {
+              deep: false,
+              name: 'slug',
+            },
+          ],
+          entryPoints: ['expo-router/build/views/Navigator.js', './(app)/[slug].js'],
+          route: '(app)/[slug]',
+          type: 'route',
+        },
+        {
+          children: [],
+          contextKey: './old/[slug].js',
+          dynamic: [
+            {
+              deep: false,
+              name: 'slug',
+            },
+          ],
+          entryPoints: ['expo-router/build/views/Navigator.js', './old/[slug].js'],
+          route: 'old/[slug]',
+          type: 'route',
+        },
+      ],
+      contextKey: 'expo-router/build/views/Navigator.js',
+      dynamic: null,
+      generated: true,
+      route: '',
+      type: 'layout',
+    });
+  });
+
+  it('handles rewrites for special route names', () => {
+    expect(
+      getRoutes(
+        inMemoryContext({
+          './+not-found': () => null,
+          './404': () => null,
+        }),
+        {
+          internal_stripLoadRoute: true,
+          skipGenerated: true,
+          rewrites: [{ source: '/404', destination: '/+not-found' }],
+          preserveRedirectAndRewrites: true,
+        }
+      )
+    ).toEqual({
+      children: [
+        {
+          children: [],
+          contextKey: './+not-found.js',
+          dynamic: [
+            {
+              deep: true,
+              name: '+not-found',
+              notFound: true,
+            },
+          ],
+          entryPoints: ['expo-router/build/views/Navigator.js', './+not-found.js'],
+          route: '+not-found',
+          type: 'route',
+        },
+        {
+          children: [],
+          contextKey: './404.js',
+          destinationContextKey: './+not-found.js',
+          dynamic: null,
+          generated: true,
+          route: '404',
+          type: 'rewrite',
+        },
+      ],
+      contextKey: 'expo-router/build/views/Navigator.js',
+      dynamic: null,
+      generated: true,
+      route: '',
+      type: 'layout',
+    });
   });
 });
 
-it('handles rewrites for special route names', () => {
-  expect(
-    getRoutes(
-      inMemoryContext({
-        './+not-found': () => null,
-        './404': () => null,
-      }),
+describe('loaders', () => {
+  it('should include routes with loaders', async () => {
+    // TODO(@hassankhan): Investigate why inMemoryContext does not work with loaders
+    const mockContext = Object.assign(
+      function (id: string) {
+        return {
+          default: () => null,
+          loader: () => Promise.resolve({ data: 'Loader for index' }),
+        };
+      },
       {
-        internal_stripLoadRoute: true,
-        skipGenerated: true,
-        rewrites: [{ source: '/404', destination: '/+not-found' }],
-        preserveRedirectAndRewrites: true,
+        keys: () => ['./(app)/index.js'],
+        resolve: (key: string) => key,
+        id: '0',
       }
-    )
-  ).toEqual({
-    children: [
-      {
-        children: [],
-        contextKey: './+not-found.js',
-        dynamic: [
-          {
-            deep: true,
-            name: '+not-found',
-            notFound: true,
-          },
-        ],
-        entryPoints: ['expo-router/build/views/Navigator.js', './+not-found.js'],
-        route: '+not-found',
-        type: 'route',
+    );
+    const routes = getRoutes(mockContext, { skipGenerated: true });
+
+    const indexRoute = routes.children.find((route) => route.route === '(app)/index');
+    expect(indexRoute).toBeDefined();
+    const loadedIndexRoute = indexRoute.loadRoute();
+    expect(await loadedIndexRoute.loader({ params: {} })).toEqual({ data: 'Loader for index' });
+  });
+
+  it('should validate loader is a function in development mode', () => {
+    process.env.NODE_ENV = 'development';
+
+    // TODO(@hassankhan): Investigate why inMemoryContext does not work with loaders
+    const mockContext = Object.assign(
+      function (id: string) {
+        // This is called by loadRoute()
+        return {
+          default: () => null,
+          loader: 'not a function', // Invalid loader
+        };
       },
       {
-        children: [],
-        contextKey: './404.js',
-        destinationContextKey: './+not-found.js',
-        dynamic: null,
-        generated: true,
-        route: '404',
-        type: 'rewrite',
-      },
-    ],
-    contextKey: 'expo-router/build/views/Navigator.js',
-    dynamic: null,
-    generated: true,
-    route: '',
-    type: 'layout',
+        keys: () => ['./(app)/index.js'],
+        resolve: (key: string) => key,
+        id: '0',
+      }
+    );
+
+    expect(() => {
+      getRoutes(mockContext, {
+        skipGenerated: true,
+        importMode: 'sync',
+        ignoreRequireErrors: false,
+      });
+    }).toThrow('Route "./(app)/index.js" exports a loader that is not a function.');
   });
 });

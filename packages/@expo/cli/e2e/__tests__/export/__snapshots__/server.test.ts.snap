@@ -119,7 +119,8 @@ exports[`server-output has expected routes manifest entries 1`] = `
       "routeKeys": {},
     },
     {
-      "file": "./blog-ssg/abc.tsx",
+      "file": "./blog-ssg/[post].tsx",
+      "generated": true,
       "namedRegex": "^/blog\\-ssg/abc(?:/)?$",
       "page": "/blog-ssg/abc",
       "routeKeys": {},
