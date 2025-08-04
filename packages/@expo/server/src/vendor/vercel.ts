@@ -7,6 +7,7 @@ import { pipeline } from 'node:stream/promises';
 import { ReadableStream as NodeReadableStream } from 'node:stream/web';
 
 import { createRequestHandler as createExpoHandler } from '../index';
+import { getApiRoute, getHtml, getRoutesManifest, handleRouteError } from '../runtime/node';
 
 export type RequestHandler = (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void>;
 
@@ -15,7 +16,12 @@ export type RequestHandler = (req: http.IncomingMessage, res: http.ServerRespons
  * response using Remix.
  */
 export function createRequestHandler({ build }: { build: string }): RequestHandler {
-  const handleRequest = createExpoHandler(build);
+  const handleRequest = createExpoHandler({
+    getRoutesManifest: getRoutesManifest(build),
+    getHtml: getHtml(build),
+    getApiRoute: getApiRoute(build),
+    handleRouteError: handleRouteError(),
+  });
 
   return async (req, res) => {
     return respond(res, await handleRequest(convertRequest(req, res)));

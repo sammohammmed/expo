@@ -1,113 +1,40 @@
 import './install';
 
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { ExpoError } from './error';
-import { Manifest, RawManifest, Route } from './types';
+import { Manifest, Route } from './types';
 import { getRedirectRewriteLocation, isResponse, parseParams } from './utils';
 
 const debug =
-  process.env.NODE_ENV === 'development'
+  process?.env?.NODE_ENV === 'development'
     ? (require('debug')('expo:server') as typeof console.log)
     : () => {};
 
-function getProcessedManifest(path: string): Manifest {
-  // TODO: JSON Schema for validation
-  const routesManifest = JSON.parse(fs.readFileSync(path, 'utf-8')) as RawManifest;
-
-  const parsed: Manifest = {
-    ...routesManifest,
-    notFoundRoutes: routesManifest.notFoundRoutes.map((value: any) => {
-      return { ...value, namedRegex: new RegExp(value.namedRegex) };
-    }),
-    apiRoutes: routesManifest.apiRoutes.map((value: any) => {
-      return { ...value, namedRegex: new RegExp(value.namedRegex) };
-    }),
-    htmlRoutes: routesManifest.htmlRoutes.map((value: any) => {
-      return { ...value, namedRegex: new RegExp(value.namedRegex) };
-    }),
-    redirects: routesManifest.redirects?.map((value: any) => {
-      return { ...value, namedRegex: new RegExp(value.namedRegex) };
-    }),
-    rewrites: routesManifest.rewrites?.map((value: any) => {
-      return { ...value, namedRegex: new RegExp(value.namedRegex) };
-    }),
-  };
-
-  return parsed;
-}
-
-export function getRoutesManifest(distFolder: string) {
-  return getProcessedManifest(path.join(distFolder, '_expo/routes.json'));
-}
-
-export function createRequestHandler(
-  distFolder: string,
-  {
-    getRoutesManifest: getInternalRoutesManifest,
-    getHtml = async (_request, route) => {
-      // Serve a static file by exact route name
-      const filePath = path.join(distFolder, route.page + '.html');
-      if (fs.existsSync(filePath)) {
-        return fs.readFileSync(filePath, 'utf-8');
-      }
-
-      // Serve a static file by route name with hoisted index
-      // See: https://github.com/expo/expo/pull/27935
-      const hoistedFilePath = route.page.match(/\/index$/)
-        ? path.join(distFolder, route.page.replace(/\/index$/, '') + '.html')
-        : null;
-      if (hoistedFilePath && fs.existsSync(hoistedFilePath)) {
-        return fs.readFileSync(hoistedFilePath, 'utf-8');
-      }
-
-      return null;
-    },
-    getApiRoute = async (route) => {
-      const filePath = path.join(distFolder, route.file);
-
-      debug(`Handling API route: ${route.page}: ${filePath}`);
-
-      // TODO: What's the standard behavior for malformed projects?
-      if (!fs.existsSync(filePath)) {
-        return null;
-      }
-
-      if (/\.c?js$/.test(filePath)) {
-        return require(filePath);
-      }
-      return import(filePath);
-    },
-    handleRouteError = async (error: Error) => {
-      // In production the server should handle unexpected errors
-      throw error;
-    },
-  }: {
-    getHtml?: (request: Request, route: Route) => Promise<string | Response | null>;
-    getRoutesManifest?: (distFolder: string) => Promise<Manifest | null>;
-    getApiRoute?: (route: Route) => Promise<any>;
-    logApiRouteExecutionError?: (error: Error) => void;
-    handleRouteError?: (error: Error) => Promise<Response>;
-  } = {}
-) {
-  let routesManifest: Manifest | undefined;
-
-  const getRoutesManifestCached = async () => {
-    let manifest: Manifest | null = null;
-    if (getInternalRoutesManifest) {
-      // Only used for development by the dev server
-      manifest = await getInternalRoutesManifest(distFolder);
-    } else if (!routesManifest) {
-      // Production
-      manifest = await getRoutesManifest(distFolder);
+export function createRequestHandler({
+  getRoutesManifest,
+  getHtml,
+  getApiRoute,
+  handleRouteError,
+}: {
+  getHtml: (request: Request, route: Route) => Promise<string | Response | null>;
+  getRoutesManifest: () => Promise<Manifest | null>;
+  getApiRoute: (route: Route) => Promise<any>;
+  handleRouteError: (error: Error) => Promise<Response>;
+}) {
+  return async function handler(request: Request): Promise<Response> {
+    const manifest = await getRoutesManifest();
+    if (!manifest) {
+      // NOTE(@EvanBacon): Development error when Expo Router is not setup.
+      // NOTE(@kitten): If the manifest is not found, we treat this as
+      // an SSG deployment and do nothing
+      return new Response('Not found', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      });
     }
 
-    if (manifest) {
-      routesManifest = manifest;
-    }
-
-    return routesManifest;
+    return requestHandler(request, manifest);
   };
 
   async function requestHandler(incomingRequest: Request, manifest: Manifest) {
@@ -201,23 +128,6 @@ export function createRequestHandler(
       headers: { 'Content-Type': 'text/plain' },
     });
   }
-
-  return async function handler(request: Request): Promise<Response> {
-    const manifest = await getRoutesManifestCached();
-    if (!manifest) {
-      // NOTE(@EvanBacon): Development error when Expo Router is not setup.
-      // NOTE(@kitten): If the manifest is not found, we treat this as
-      // an SSG deployment and do nothing
-      return new Response('Not found', {
-        status: 404,
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      });
-    }
-
-    return requestHandler(request, manifest);
-  };
 }
 
 async function respondNotFoundHTML(
