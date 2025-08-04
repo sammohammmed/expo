@@ -1,11 +1,11 @@
-import fs from 'fs-extra';
 import path from 'path';
 
-import { ClientBuilder, ClientBuildFlavor, Platform, S3Client } from './types';
+import { ClientBuilder, ClientBuildFlavor, Platform } from './types';
 import { EXPO_GO_ANDROID_DIR } from '../Constants';
 import logger from '../Logger';
 import { androidAppVersionAsync } from '../ProjectVersions';
-import { spawnAsync } from '../Utils';
+import { getAssetName, spawnAsync } from '../Utils';
+import * as GitHub from '../GitHub';
 
 export default class AndroidClientBuilder implements ClientBuilder {
   platform: Platform = 'android';
@@ -24,7 +24,8 @@ export default class AndroidClientBuilder implements ClientBuilder {
   }
 
   getClientUrl(appVersion: string): string {
-    return `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
+    const assetName = getAssetName(appVersion, 'android');
+    return GitHub.getReleaseAssetUrl(appVersion, assetName);
   }
 
   async getAppVersionAsync(): Promise<string> {
@@ -44,14 +45,10 @@ export default class AndroidClientBuilder implements ClientBuilder {
     }
   }
 
-  async uploadBuildAsync(s3Client: S3Client, appVersion: string) {
-    const file = fs.createReadStream(this.getAppPath());
+  async uploadBuildAsync(appVersion: string) {
+    const assetName = getAssetName(appVersion, 'android');
+    const buildFilePath = this.getAppPath();
 
-    await s3Client.putObject({
-      Bucket: 'exp-android-apks',
-      Key: `Exponent-${appVersion}.apk`,
-      Body: file,
-      ACL: 'public-read',
-    });
+    await GitHub.uploadBuildAsync(appVersion, buildFilePath, assetName);
   }
 }

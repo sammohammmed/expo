@@ -1,4 +1,3 @@
-import { S3 } from '@aws-sdk/client-s3';
 import { Command } from '@expo/commander';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
@@ -16,8 +15,8 @@ import Git from '../Git';
 import logger from '../Logger';
 import { androidAppVersionAsync, iosAppVersionAsync } from '../ProjectVersions';
 import { modifySdkVersionsAsync, modifyVersionsAsync } from '../Versions';
-
-const s3Client = new S3({ region: 'us-east-1' });
+import * as GitHub from '../GitHub';
+import { getAssetName } from '../Utils';
 
 const RELEASE_BUILD_PROFILE = 'release-client';
 const PUBLISH_CLIENT_BUILD_PROFILE = 'publish-client';
@@ -124,11 +123,13 @@ async function main(actionId: string | undefined) {
 }
 
 function getAndroidApkUrl(appVersion: string): string {
-  return `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
+  const assetName = getAssetName(appVersion, 'android');
+  return GitHub.getReleaseAssetUrl(appVersion, assetName);
 }
 
 function getIosSimulatorUrl(appVersion: string): string {
-  return `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
+  const assetName = getAssetName(appVersion, 'ios');
+  return GitHub.getReleaseAssetUrl(appVersion, assetName);
 }
 
 async function confirmPromptIfOverridingRemoteFileAsync(
@@ -452,15 +453,10 @@ async function internalIosSimulatorPublishAsync() {
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
   });
   const appVersion = await iosAppVersionAsync();
-  const file = fs.createReadStream(tmpTarGzPath);
 
-  logger.info(`Uploading Exponent-${appVersion}.tar.gz to S3`);
-  await s3Client.putObject({
-    Bucket: 'exp-ios-simulator-apps',
-    Key: `Exponent-${appVersion}.tar.gz`,
-    Body: file,
-    ACL: 'public-read',
-  });
+  logger.info(`Uploading Exponent-${appVersion}.tar.gz to GitHub Releases`);
+  const assetName = getAssetName(appVersion, 'ios');
+  await GitHub.uploadBuildAsync(appVersion, tmpTarGzPath, assetName);
 
   logger.info('Updating versions endpoint');
   await modifySdkVersionsAsync(sdkVersion, (sdkVersions) => {
@@ -482,15 +478,10 @@ async function internalAndroidAPKPublishAsync() {
     logger.error(`Expected exactly one .apk file. Found: ${artifactPaths}`);
   }
   const appVersion = await androidAppVersionAsync();
-  const file = fs.createReadStream(artifactPaths[0]);
 
-  logger.info(`Uploading Exponent-${appVersion}.apk to S3`);
-  await s3Client.putObject({
-    Bucket: 'exp-android-apks',
-    Key: `Exponent-${appVersion}.apk`,
-    Body: file,
-    ACL: 'public-read',
-  });
+  logger.info(`Uploading Exponent-${appVersion}.apk to GitHub Releases`);
+  const assetName = getAssetName(appVersion, 'android');
+  await GitHub.uploadBuildAsync(appVersion, artifactPaths[0], assetName);
 
   logger.info('Updating versions endpoint');
   await modifySdkVersionsAsync(sdkVersion, (sdkVersions) => {

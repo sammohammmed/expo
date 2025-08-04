@@ -4,6 +4,7 @@ import { glob, GlobOptions } from 'glob';
 import ora from 'ora';
 
 import { EXPO_DIR } from './Constants';
+import { Platform } from './client-build/types';
 
 export { SpawnResult, SpawnOptions };
 
@@ -196,3 +197,7 @@ export async function runWithSpinner<Result>(
     process.exit(1);
   }
 }
+
+export const getAssetName = (appVersion: string, platform: Platform) => {
+  return `Exponent-${appVersion}.${platform === 'ios' ? 'tar.gz' : 'apk'}`;
+};

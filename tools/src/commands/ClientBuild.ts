@@ -1,4 +1,3 @@
-import { S3 } from '@aws-sdk/client-s3';
 import { Command } from '@expo/commander';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -17,7 +16,6 @@ import { ClientBuilder, ClientBuildFlavor, Platform } from '../client-build/type
 import askForPlatformAsync from '../utils/askForPlatformAsync';
 import askForSdkVersionAsync from '../utils/askForSDKVersionAsync';
 
-const s3Client = new S3({ region: 'us-east-1' });
 const { yellow, blue, magenta } = chalk;
 
 type ActionOptions = {
@@ -157,7 +155,7 @@ async function uploadAsync(
   }
   logger.info(`Uploading ${yellow.bold(appVersion)} build`);
 
-  await builder.uploadBuildAsync(s3Client, appVersion);
+  await builder.uploadBuildAsync(appVersion);
 }
 
 async function releaseAsync(

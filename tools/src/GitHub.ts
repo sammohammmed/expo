@@ -1,6 +1,7 @@
 import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
 import parseDiff from 'parse-diff';
 import path from 'path';
+import fs from 'fs-extra';
 
 import { EXPO_DIR } from './Constants';
 import { GitFileDiff } from './Git';
@@ -21,6 +22,48 @@ const repo = 'expo';
 export async function getAuthenticatedUserAsync() {
   const { data } = await octokit.users.getAuthenticated();
   return data;
+}
+
+/**
+ * Constructs the GitHub release asset download URL for a given app version and asset name.
+ */
+export function getReleaseAssetUrl(version: string, assetName: string): string {
+  const tag = `sdk-${version}`;
+  return `https://github.com/${owner}/${repo}/releases/download/${tag}/${assetName}`;
+}
+
+/**
+ * Uploads a build artifact to a GitHub Release.
+ * It assumes the release with tag `sdk-${version}` exists.
+ * If an asset with the same name already exists on the release, it will be replaced.
+ */
+export async function uploadBuildAsync(version: string, buildFilePath: string, assetName: string) {
+  const tag = `sdk-${version}`;
+  const { data: release } = await octokit.repos.getReleaseByTag({
+    owner,
+    repo,
+    tag,
+  });
+  // check for existing asset and delete if found
+  const existingAsset = release.assets.find((asset) => asset.name === assetName);
+  if (existingAsset) {
+    await octokit.repos.deleteReleaseAsset({
+      owner,
+      repo,
+      asset_id: existingAsset.id,
+    });
+  }
+  // upload the asset
+  const fileStream = fs.createReadStream(buildFilePath);
+
+  await octokit.repos.uploadReleaseAsset({
+    owner,
+    repo,
+    release_id: release.id,
+    name: assetName,
+    // @ts-expect-error Octokit expects a string, but ReadableStream also works
+    data: fileStream,
+  });
 }
 
 /**

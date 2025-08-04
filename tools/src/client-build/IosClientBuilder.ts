@@ -5,7 +5,8 @@ import { ClientBuilder, ClientBuildFlavor, Platform } from './types';
 import { podInstallAsync } from '../CocoaPods';
 import { EXPO_DIR, EXPO_GO_IOS_DIR } from '../Constants';
 import { iosAppVersionAsync } from '../ProjectVersions';
-import { spawnAsync } from '../Utils';
+import { getAssetName, spawnAsync } from '../Utils';
+import * as GitHub from '../GitHub';
 
 export default class IosClientBuilder implements ClientBuilder {
   platform: Platform = 'ios';
@@ -22,7 +23,8 @@ export default class IosClientBuilder implements ClientBuilder {
   }
 
   getClientUrl(appVersion: string): string {
-    return `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
+    const assetName = getAssetName(appVersion, 'ios');
+    return GitHub.getReleaseAssetUrl(appVersion, assetName);
   }
 
   async getAppVersionAsync(): Promise<string> {
@@ -38,22 +40,18 @@ export default class IosClientBuilder implements ClientBuilder {
     });
   }
 
-  async uploadBuildAsync(s3Client, appVersion: string) {
+  async uploadBuildAsync(appVersion: string) {
     const tempAppPath = path.join(EXPO_DIR, 'temp-app.tar.gz');
+    const assetName = getAssetName(appVersion, 'ios');
 
-    await spawnAsync('tar', ['-zcvf', tempAppPath, '-C', this.getAppPath(), '.'], {
-      stdio: ['ignore', 'ignore', 'inherit'], // only stderr
-    });
+    try {
+      await spawnAsync('tar', ['-zcvf', tempAppPath, '-C', this.getAppPath(), '.'], {
+        stdio: ['ignore', 'ignore', 'inherit'],
+      });
 
-    const file = fs.createReadStream(tempAppPath);
-
-    await s3Client.putObject({
-      Bucket: 'exp-ios-simulator-apps',
-      Key: `Exponent-${appVersion}.tar.gz`,
-      Body: file,
-      ACL: 'public-read',
-    });
-
-    await fs.remove(tempAppPath);
+      await GitHub.uploadBuildAsync(appVersion, tempAppPath, assetName);
+    } finally {
+      await fs.remove(tempAppPath);
+    }
   }
 }
