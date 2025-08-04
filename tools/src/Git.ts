@@ -178,7 +178,7 @@ export class GitDirectory {
    */
   async getSDKVersionFromBranchNameAsync(): Promise<string | null> {
     const currentBranch = await this.getCurrentBranchNameAsync();
-    const match = currentBranch.match(/\bsdk-(\d+)$/);
+    const match = currentBranch.match(/\bnishan-sdk-(\d+)$/);
 
     if (match) {
       const sdkMajorNumber = match[1];

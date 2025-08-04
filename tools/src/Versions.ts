@@ -105,23 +105,23 @@ export async function modifySdkVersionsAsync(
   sdkVersion: string,
   modifier: (sdkVersions: VersionsSdkSchema) => VersionsSdkSchema | Promise<VersionsSdkSchema>
 ): Promise<VersionsSdkSchema> {
-  if (process.env.CI) {
-    logger.info(`Modifying SDK version: ${sdkVersion}`);
-  }
-  const versions = await getVersionsAsync();
-  if (process.env.CI) {
-    logger.debug('Current versions before modification:', JSON.stringify(versions, null, 2));
-  }
+  // if (process.env.CI) {
+  //   logger.info(`Modifying SDK version: ${sdkVersion}`);
+  // }
+  // const versions = await getVersionsAsync();
+  // if (process.env.CI) {
+  //   logger.debug('Current versions before modification:', JSON.stringify(versions, null, 2));
+  // }
 
-  const sdkVersions = await modifier(versions.sdkVersions[sdkVersion] ?? {});
-  if (process.env.CI) {
-    logger.debug('Modified SDK version data:', JSON.stringify(sdkVersions, null, 2));
-  }
+  // const sdkVersions = await modifier(versions.sdkVersions[sdkVersion] ?? {});
+  // if (process.env.CI) {
+  //   logger.debug('Modified SDK version data:', JSON.stringify(sdkVersions, null, 2));
+  // }
 
-  versions.sdkVersions[sdkVersion] = sdkVersions;
-  await setVersionsAsync(versions);
-  if (process.env.CI) {
-    logger.info(`Successfully modified and saved SDK version: ${sdkVersion}`);
-  }
-  return sdkVersions;
+  // versions.sdkVersions[sdkVersion] = sdkVersions;
+  // await setVersionsAsync(versions);
+  // if (process.env.CI) {
+  //   logger.info(`Successfully modified and saved SDK version: ${sdkVersion}`);
+  // }
+  return {};
 }

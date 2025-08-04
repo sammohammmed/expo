@@ -53,9 +53,8 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
       asset_id: existingAsset.id,
     });
   }
-  // upload the asset
-  const fileStream = fs.createReadStream(buildFilePath);
 
+  const fileStream = fs.createReadStream(buildFilePath);
   await octokit.repos.uploadReleaseAsset({
     owner,
     repo,
