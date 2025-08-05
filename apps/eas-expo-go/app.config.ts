@@ -50,7 +50,7 @@ const mapBuildProfileToConfig: Record<string, ExpoConfig> = {
     name: 'Expo Go',
     extra: {
       eas: {
-        projectId: '79a64298-2d61-42ae-9cc9-b2a358d6869e',
+        projectId: '3d7abddb-e00a-4c01-a613-db3de44dd8dd',
       },
     },
   },
