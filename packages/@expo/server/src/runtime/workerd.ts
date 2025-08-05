@@ -1,8 +1,6 @@
 import { Manifest, RawManifest, Route } from '../types';
 import { initManifestRegExp } from '../utils/initManifestRegExp';
 
-// TODO: Allow adding extra prod headers like Cache-Control...
-
 export const handleRouteError = () => async (error: Error) => {
   throw error;
 };

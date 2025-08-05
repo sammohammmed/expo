@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getApiRoute = exports.getHtml = exports.getRoutesManifest = exports.handleRouteError = void 0;
 const initManifestRegExp_1 = require("../utils/initManifestRegExp");
-// TODO: Allow adding extra prod headers like Cache-Control...
 const handleRouteError = () => async (error) => {
     throw error;
 };
