@@ -2,6 +2,7 @@ import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
 import parseDiff from 'parse-diff';
 import path from 'path';
 import fs from 'fs-extra';
+import logger from './Logger';
 
 import { EXPO_DIR } from './Constants';
 import { GitFileDiff } from './Git';
@@ -17,6 +18,56 @@ const owner = 'expo';
 const repo = 'expo';
 
 /**
+ * Ensures a release for the given version exists and that its tag points to the given commit.
+ * If a release for this tag already exists but points to a different commit, it will be deleted
+ * and re-created.
+ */
+export async function ensureReleaseAsync(version: string, commitSha: string) {
+  const tag = `Exponent-${version}`;
+  let release;
+  try {
+    const { data } = await octokit.repos.getReleaseByTag({ owner, repo, tag });
+    logger.info(`Release ${tag} exists`);
+    release = data;
+  } catch (error: any) {
+    if (error.status !== 404) {
+      logger.error(`Error getting release ${tag}: ${error.message}`);
+      throw error;
+    }
+    logger.info(`Release ${tag} does not exist`);
+    // Release does not exist, which is fine. We will create it.
+  }
+
+  if (release) {
+    if (release.target_commitish === commitSha) {
+      logger.info(`Release ${tag} points to the correct commit`);
+      // Release exists and points to the correct commit. Nothing to do.
+      return;
+    }
+
+    logger.info(`Release ${tag} points to a different commit. Deleting and recreating.`);
+    // Release exists but points to a different commit. We need to delete and recreate.
+    // Deleting a release also deletes the associated Git tag.
+    await octokit.repos.deleteRelease({
+      owner,
+      repo,
+      release_id: release.id,
+    });
+    logger.info(`Release ${tag} deleted`);
+  }
+
+  // Create the release (and tag)
+  await octokit.repos.createRelease({
+    owner,
+    repo,
+    tag_name: tag,
+    target_commitish: commitSha,
+    name: `SDK ${version}`,
+    prerelease: true,
+  });
+}
+
+/**
  * Returns public informations about the currently authenticated (by GitHub API token) user.
  */
 export async function getAuthenticatedUserAsync() {
@@ -28,17 +79,17 @@ export async function getAuthenticatedUserAsync() {
  * Constructs the GitHub release asset download URL for a given app version and asset name.
  */
 export function getReleaseAssetUrl(version: string, assetName: string): string {
-  const tag = `sdk-${version}`;
+  const tag = `Exponent-${version}`;
   return `https://github.com/${owner}/${repo}/releases/download/${tag}/${assetName}`;
 }
 
 /**
  * Uploads a build artifact to a GitHub Release.
- * It assumes the release with tag `sdk-${version}` exists.
+ * It assumes the release with tag `Exponent-${version}` exists.
  * If an asset with the same name already exists on the release, it will be replaced.
  */
 export async function uploadBuildAsync(version: string, buildFilePath: string, assetName: string) {
-  const tag = `sdk-${version}`;
+  const tag = `Exponent-${version}`;
   const { data: release } = await octokit.repos.getReleaseByTag({
     owner,
     repo,

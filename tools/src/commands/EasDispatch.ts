@@ -453,9 +453,15 @@ async function internalIosSimulatorPublishAsync() {
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
   });
   const appVersion = await iosAppVersionAsync();
+  let commitSha = process.env.EAS_BUILD_GIT_COMMIT_HASH;
+  if (!commitSha) {
+    const { stdout } = await spawnAsync('git', ['rev-parse', 'HEAD']);
+    commitSha = stdout;
+  }
 
   logger.info(`Uploading Exponent-${appVersion}.tar.gz to GitHub Releases`);
   const assetName = getAssetName(appVersion, 'ios');
+  await GitHub.ensureReleaseAsync(appVersion, commitSha.trim());
   await GitHub.uploadBuildAsync(appVersion, tmpTarGzPath, assetName);
 
   logger.info('Updating versions endpoint');
@@ -478,9 +484,15 @@ async function internalAndroidAPKPublishAsync() {
     logger.error(`Expected exactly one .apk file. Found: ${artifactPaths}`);
   }
   const appVersion = await androidAppVersionAsync();
+  let commitSha = process.env.EAS_BUILD_GIT_COMMIT_HASH;
+  if (!commitSha) {
+    const { stdout } = await spawnAsync('git', ['rev-parse', 'HEAD']);
+    commitSha = stdout;
+  }
 
   logger.info(`Uploading Exponent-${appVersion}.apk to GitHub Releases`);
   const assetName = getAssetName(appVersion, 'android');
+  await GitHub.ensureReleaseAsync(appVersion, commitSha.trim());
   await GitHub.uploadBuildAsync(appVersion, artifactPaths[0], assetName);
 
   logger.info('Updating versions endpoint');
