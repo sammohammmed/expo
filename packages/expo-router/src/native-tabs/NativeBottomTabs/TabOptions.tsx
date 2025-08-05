@@ -1,10 +1,12 @@
 'use client';
 
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { PropsWithChildren, ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
 import type { NativeTabOptions } from './NativeTabsView';
 import { filterAllowedChildrenElements, isChildOfType } from './utils';
+import { useSafeLayoutEffect } from '../../views/useSafeLayoutEffect';
 import { Icon, Badge, Label } from '../common/elements';
 
 export type TabProps = PropsWithChildren<{
@@ -34,6 +36,22 @@ export type TabProps = PropsWithChildren<{
 }>;
 
 export function TabTrigger(props: TabProps) {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const isFocused = navigation.isFocused();
+
+  useSafeLayoutEffect(() => {
+    if (isFocused) {
+      if (navigation.getState()?.type !== 'tab') {
+        throw new Error(
+          `Trigger component can only be used in the tab screen. Current route: ${route.name}`
+        );
+      }
+      const options = convertTabPropsToOptions(props);
+      navigation.setOptions(options);
+    }
+  }, [isFocused]);
+
   return null;
 }
 

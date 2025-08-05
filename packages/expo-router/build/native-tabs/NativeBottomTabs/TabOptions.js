@@ -4,10 +4,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TabTrigger = TabTrigger;
 exports.convertTabPropsToOptions = convertTabPropsToOptions;
 exports.isTab = isTab;
+const native_1 = require("@react-navigation/native");
 const react_1 = require("react");
 const utils_1 = require("./utils");
+const useSafeLayoutEffect_1 = require("../../views/useSafeLayoutEffect");
 const elements_1 = require("../common/elements");
 function TabTrigger(props) {
+    const route = (0, native_1.useRoute)();
+    const navigation = (0, native_1.useNavigation)();
+    const isFocused = navigation.isFocused();
+    (0, useSafeLayoutEffect_1.useSafeLayoutEffect)(() => {
+        if (isFocused) {
+            if (navigation.getState()?.type !== 'tab') {
+                throw new Error(`Trigger component can only be used in the tab screen. Current route: ${route.name}`);
+            }
+            const options = convertTabPropsToOptions(props);
+            navigation.setOptions(options);
+        }
+    }, [isFocused]);
     return null;
 }
 function convertTabPropsToOptions({ options, hidden, children, disablePopToTop, disableScrollToTop, }) {
