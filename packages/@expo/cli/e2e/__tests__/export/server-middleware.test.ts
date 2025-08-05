@@ -28,6 +28,7 @@ describe('exports middleware', () => {
           E2E_ROUTER_REWRITES: JSON.stringify([
             { source: '/rewrite', destination: '/second' },
           ]),
+          E2E_ROUTER_SERVER_MIDDLEWARE: 'true',
         },
       }
     );
@@ -172,6 +173,7 @@ describe('skips bundling middleware on Android', () => {
           EXPO_USE_FAST_RESOLVER: 'false',
           EXPO_USE_STATIC: 'server',
           E2E_ROUTER_SRC: 'server-middleware-async',
+          E2E_ROUTER_SERVER_MIDDLEWARE: 'true',
         },
       }
     )).resolves.toBeDefined();
@@ -193,8 +195,41 @@ describe('skips bundling middleware on iOS', () => {
           EXPO_USE_FAST_RESOLVER: 'false',
           EXPO_USE_STATIC: 'server',
           E2E_ROUTER_SRC: 'server-middleware-async',
+          E2E_ROUTER_SERVER_MIDDLEWARE: 'true',
         },
       }
     )).resolves.toBeDefined();
+  });
+});
+
+describe('skips middleware when flag is disabled', () => {
+  const projectRoot = getRouterE2ERoot();
+  const outputName = 'dist-server-middleware-disabled';
+  const outputDir = path.join(projectRoot, outputName);
+
+  it('does not export middleware when unstable_useServerMiddleware is not enabled', async () => {
+    const results = await executeExpoAsync(
+      projectRoot,
+      ['export', '-p', 'web', '--output-dir', outputName],
+      {
+        env: {
+          NODE_ENV: 'production',
+          EXPO_USE_STATIC: 'server',
+          E2E_ROUTER_SRC: 'server-middleware-async',
+          // E2E_ROUTER_SERVER_MIDDLEWARE: 'false',
+        },
+      }
+    );
+
+    expect(results.stderr).toContain('Server middleware detected but not enabled');
+
+    const files = findProjectFiles(outputDir);
+
+    // Middleware should not be bundled or referenced in routes.json
+    expect(files).not.toContain('server/_expo/functions/+middleware.js');
+    const routesJson = JSON.parse(
+      fs.readFileSync(path.join(outputDir, 'server/_expo/routes.json'), 'utf8')
+    );
+    expect(routesJson.middleware).not.toBeDefined();
   });
 });

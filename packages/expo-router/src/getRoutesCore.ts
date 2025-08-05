@@ -23,6 +23,8 @@ export type Options = {
   skipGenerated?: boolean;
   /* Skip the generated not found route  */
   notFound?: boolean;
+  /* Enable experimental server middleware support */
+  unstable_useServerMiddleware?: boolean;
   importMode?: string;
   platformRoutes?: boolean;
   sitemap?: boolean;
@@ -104,9 +106,27 @@ export function getRoutes(contextModule: RequireContext, options: Options): Rout
  * Given a RequireContext, return the middleware node if one is found. If more than one middleware file is found, an error is thrown.
  */
 function getMiddleware(contextModule: RequireContext, options: Options): MiddlewareNode | null {
-  const isValidMiddleware = (key: string) => /^\.\/\+middleware\.[tj]sx?$/.test(key);
-
   const allMiddlewareFiles = contextModule.keys().filter((key) => key.includes('+middleware'));
+  
+  // Check if middleware is enabled via plugin config
+  if (!options.unstable_useServerMiddleware) {
+    if (allMiddlewareFiles.length > 0) {
+      console.warn(
+        '[Expo Router] Server middleware detected but not enabled.\n' +
+        'To use server middleware, update your app.json:\n\n' +
+        JSON.stringify({
+          expo: {
+            plugins: [
+              ["expo-router", { unstable_useServerMiddleware: true }]
+            ]
+          }
+        }, null, 2)
+      );
+    }
+    return null;
+  }
+
+  const isValidMiddleware = (key: string) => /^\.\/\+middleware\.[tj]sx?$/.test(key);
 
   const rootMiddlewareFiles = allMiddlewareFiles.filter(isValidMiddleware);
 
