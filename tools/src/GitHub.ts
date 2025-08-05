@@ -107,26 +107,15 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
     });
   }
 
-  logger.info(`Uploading asset ${assetName} to release ${release.id}`);
   const fileContent = await fs.readFile(buildFilePath);
-  const fileExtension = path.extname(assetName);
-
-  let contentType = 'application/octet-stream';
-  if (fileExtension === '.gz') {
-    contentType = 'application/gzip';
-  } else if (fileExtension === '.apk') {
-    contentType = 'application/vnd.android.package-archive';
-  }
-
-  await octokit.repos.uploadReleaseAsset({
+  logger.info(
+    `Uploading asset ${assetName} to release ${release.id} ${fileContent.length} ${owner} ${repo} ${assetName}`
+  );
+  await octokit.rest.repos.uploadReleaseAsset({
     owner,
     repo,
     release_id: release.id,
     name: assetName,
-    headers: {
-      'content-type': contentType,
-      'content-length': fileContent.length,
-    },
     // The data parameter is typed as string, but the underlying API handles buffers.
     data: fileContent as any,
   });
