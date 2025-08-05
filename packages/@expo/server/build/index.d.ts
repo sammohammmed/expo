@@ -1,5 +1,8 @@
 import { Manifest, Route } from './types';
-type BeforeResponseCallback = (route: Route | null, responseInit: ResponseInit) => ResponseInit;
+type ResponseInitLike = Omit<ResponseInit, 'headers'> & {
+    headers: Record<string, string>;
+};
+type BeforeResponseCallback = (route: Route | null, responseInit: ResponseInitLike) => ResponseInitLike;
 export declare function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleRouteError, beforeErrorResponse, beforeResponse, beforeHTMLResponse, beforeAPIResponse, }: {
     getHtml: (request: Request, route: Route) => Promise<string | Response | null>;
     getRoutesManifest: () => Promise<Manifest | null>;

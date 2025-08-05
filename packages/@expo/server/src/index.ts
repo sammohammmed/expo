@@ -2,10 +2,19 @@ import { ExpoError } from './error';
 import { Manifest, Route } from './types';
 import { getRedirectRewriteLocation, isResponse, parseParams } from './utils';
 
+type ResponseInitLike = Omit<ResponseInit, 'headers'> & {
+  headers: Record<string, string>;
+};
 // NOTE(@krystofwoldrich): For better general usability of the callback bodyInit could be also passed as arg.
-// But we don't have a use case for it now.
-type BeforeResponseCallback = (route: Route | null, responseInit: ResponseInit) => ResponseInit;
-function noopBeforeResponse(_route: Route | null, responseInit: ResponseInit): ResponseInit {
+// But we don't have a use case for it now, same for full HeaderInit type.
+type BeforeResponseCallback = (
+  route: Route | null,
+  responseInit: ResponseInitLike
+) => ResponseInitLike;
+function noopBeforeResponse(
+  _route: Route | null,
+  responseInit: ResponseInitLike
+): ResponseInitLike {
   return responseInit;
 }
 
@@ -139,9 +148,11 @@ export function createRequestHandler({
   function createResponse(
     route: Route | null,
     bodyInit: BodyInit | null,
-    responseInit: ResponseInit,
+    responseInit: ResponseInitLike,
     routeType: 'html' | 'api' | null = null
   ): Response {
+    const originalStatus = responseInit.status;
+
     let modifiedResponseInit = responseInit;
     // Callback call order matters, general rule is to call more specific callbacks first.
     if (routeType === 'html') {
@@ -151,7 +162,7 @@ export function createRequestHandler({
       modifiedResponseInit = beforeAPIResponse(route, modifiedResponseInit);
     }
     // Second to last is error response callback
-    if (responseInit.status && responseInit.status > 399) {
+    if (originalStatus && originalStatus > 399) {
       modifiedResponseInit = beforeErrorResponse(route, modifiedResponseInit);
     }
     // Generic before response callback last

@@ -103,6 +103,7 @@ function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleR
         });
     }
     function createResponse(route, bodyInit, responseInit, routeType = null) {
+        const originalStatus = responseInit.status;
         let modifiedResponseInit = responseInit;
         // Callback call order matters, general rule is to call more specific callbacks first.
         if (routeType === 'html') {
@@ -112,7 +113,7 @@ function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleR
             modifiedResponseInit = beforeAPIResponse(route, modifiedResponseInit);
         }
         // Second to last is error response callback
-        if (responseInit.status && responseInit.status > 399) {
+        if (originalStatus && originalStatus > 399) {
             modifiedResponseInit = beforeErrorResponse(route, modifiedResponseInit);
         }
         // Generic before response callback last
