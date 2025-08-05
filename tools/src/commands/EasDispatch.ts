@@ -463,7 +463,6 @@ async function internalIosSimulatorPublishAsync() {
   logger.info(`Uploading Exponent-${appVersion}.tar.gz to GitHub Releases`);
   const assetName = getAssetName(appVersion, 'ios');
   logger.info(`Commit SHA: ${commitSha}`);
-  await GitHub.ensureReleaseAsync(appVersion, commitSha.trim());
   await GitHub.uploadBuildAsync(appVersion, tmpTarGzPath, assetName);
 
   logger.info('Updating versions endpoint');

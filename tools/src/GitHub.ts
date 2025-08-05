@@ -56,6 +56,7 @@ export async function ensureReleaseAsync(version: string, commitSha: string) {
     logger.info(`Release ${tag} deleted`);
   }
 
+  octokit.repos.createTagProtection;
   // Create the release (and tag)
   await octokit.repos.createRelease({
     owner,
@@ -95,6 +96,7 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
     repo,
     tag,
   });
+  logger.info(`Release ${tag} found ${release.id}`);
   // check for existing asset and delete if found
   const existingAsset = release.assets.find((asset) => asset.name === assetName);
   if (existingAsset) {
@@ -105,6 +107,7 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
     });
   }
 
+  logger.info(`Uploading asset ${assetName} to release ${release.id}`);
   const fileStream = fs.createReadStream(buildFilePath);
   await octokit.repos.uploadReleaseAsset({
     owner,
@@ -114,6 +117,7 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
     // @ts-expect-error Octokit expects a string, but ReadableStream also works
     data: fileStream,
   });
+  logger.info(`Asset ${assetName} uploaded to release ${release.id}`);
 }
 
 /**
