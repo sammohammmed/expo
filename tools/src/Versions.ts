@@ -105,6 +105,7 @@ export async function modifySdkVersionsAsync(
   sdkVersion: string,
   modifier: (sdkVersions: VersionsSdkSchema) => VersionsSdkSchema | Promise<VersionsSdkSchema>
 ): Promise<VersionsSdkSchema> {
+  logger.info('Not modifying SDK versions!');
   // if (process.env.CI) {
   //   logger.info(`Modifying SDK version: ${sdkVersion}`);
   // }
