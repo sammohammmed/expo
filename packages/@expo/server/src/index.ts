@@ -1,5 +1,3 @@
-import './install';
-
 import { ExpoError } from './error';
 import { Manifest, Route } from './types';
 import { getRedirectRewriteLocation, isResponse, parseParams } from './utils';

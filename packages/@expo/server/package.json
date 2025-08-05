@@ -3,11 +3,6 @@
   "version": "0.6.2",
   "description": "Server API for Expo Router projects",
   "main": "build/index.js",
-  "sideEffects": [
-    "./install.js",
-    "./build/install.js",
-    "./build/assertion.js"
-  ],
   "scripts": {
     "build": "expo-module build",
     "clean": "expo-module clean",
@@ -46,5 +41,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "engines": {
+    "node": ">= 20.16.0"
   }
 }

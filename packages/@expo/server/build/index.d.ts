@@ -1,4 +1,3 @@
-import './install';
 import { Manifest, Route } from './types';
 export declare function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleRouteError, }: {
     getHtml: (request: Request, route: Route) => Promise<string | Response | null>;

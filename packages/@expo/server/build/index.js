@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createRequestHandler = createRequestHandler;
-require("./install");
 const error_1 = require("./error");
 const utils_1 = require("./utils");
 function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleRouteError, }) {
