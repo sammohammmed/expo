@@ -108,14 +108,27 @@ export async function uploadBuildAsync(version: string, buildFilePath: string, a
   }
 
   logger.info(`Uploading asset ${assetName} to release ${release.id}`);
-  const fileStream = fs.createReadStream(buildFilePath);
+  const fileContent = await fs.readFile(buildFilePath);
+  const fileExtension = path.extname(assetName);
+
+  let contentType = 'application/octet-stream';
+  if (fileExtension === '.gz') {
+    contentType = 'application/gzip';
+  } else if (fileExtension === '.apk') {
+    contentType = 'application/vnd.android.package-archive';
+  }
+
   await octokit.repos.uploadReleaseAsset({
     owner,
     repo,
     release_id: release.id,
     name: assetName,
-    // @ts-expect-error Octokit expects a string, but ReadableStream also works
-    data: fileStream,
+    headers: {
+      'content-type': contentType,
+      'content-length': fileContent.length,
+    },
+    // The data parameter is typed as string, but the underlying API handles buffers.
+    data: fileContent as any,
   });
   logger.info(`Asset ${assetName} uploaded to release ${release.id}`);
 }
