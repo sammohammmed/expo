@@ -7,10 +7,7 @@
     "privacy": "unlisted",
     "sdkVersion": "53.0.0",
     "version": "53.0.0",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "primaryColor": "#cccccc",
     "icon": "https://s3.amazonaws.com/exp-brand-assets/ExponentEmptyManifest_192.png",
     "updates": {
@@ -34,7 +31,7 @@
     "jsEngine": "hermes",
     "extra": {
       "eas": {
-        "projectId": "e3ec11de-308d-48c3-9f4c-c07d90733495"
+        "projectId": "3d7abddb-e00a-4c01-a613-db3de44dd8dd"
       }
     },
     "runtimeVersion": "53.0.0"
