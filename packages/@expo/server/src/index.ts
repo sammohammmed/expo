@@ -4,11 +4,6 @@ import { ExpoError } from './error';
 import { Manifest, Route } from './types';
 import { getRedirectRewriteLocation, isResponse, parseParams } from './utils';
 
-const debug =
-  process?.env?.NODE_ENV === 'development'
-    ? (require('debug')('expo:server') as typeof console.log)
-    : () => {};
-
 export function createRequestHandler({
   getRoutesManifest,
   getHtml,
@@ -40,7 +35,6 @@ export function createRequestHandler({
   async function requestHandler(incomingRequest: Request, manifest: Manifest) {
     let request = incomingRequest;
     let url = new URL(request.url);
-    debug('Request', url.pathname);
 
     if (manifest.redirects) {
       for (const route of manifest.redirects) {
@@ -212,6 +206,5 @@ function respondRedirect(url: URL, request: Request, route: Route): Response {
     status = route.permanent ? 308 : 307;
   }
 
-  debug('Redirecting', status, target);
   return Response.redirect(target, status);
 }

@@ -4,9 +4,6 @@ exports.createRequestHandler = createRequestHandler;
 require("./install");
 const error_1 = require("./error");
 const utils_1 = require("./utils");
-const debug = process?.env?.NODE_ENV === 'development'
-    ? require('debug')('expo:server')
-    : () => { };
 function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleRouteError, }) {
     return async function handler(request) {
         const manifest = await getRoutesManifest();
@@ -26,7 +23,6 @@ function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleR
     async function requestHandler(incomingRequest, manifest) {
         let request = incomingRequest;
         let url = new URL(request.url);
-        debug('Request', url.pathname);
         if (manifest.redirects) {
             for (const route of manifest.redirects) {
                 if (!route.namedRegex.test(url.pathname)) {
@@ -170,7 +166,6 @@ function respondRedirect(url, request, route) {
     else {
         status = route.permanent ? 308 : 307;
     }
-    debug('Redirecting', status, target);
     return Response.redirect(target, status);
 }
 //# sourceMappingURL=index.js.map
