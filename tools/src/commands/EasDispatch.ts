@@ -454,6 +454,7 @@ async function internalIosSimulatorPublishAsync() {
   });
   const appVersion = await iosAppVersionAsync();
   let commitSha = process.env.EAS_BUILD_GIT_COMMIT_HASH;
+  logger.info(`Commit SHA ENV: ${commitSha}`);
   if (!commitSha) {
     const { stdout } = await spawnAsync('git', ['rev-parse', 'HEAD']);
     commitSha = stdout;
@@ -461,6 +462,7 @@ async function internalIosSimulatorPublishAsync() {
 
   logger.info(`Uploading Exponent-${appVersion}.tar.gz to GitHub Releases`);
   const assetName = getAssetName(appVersion, 'ios');
+  logger.info(`Commit SHA: ${commitSha}`);
   await GitHub.ensureReleaseAsync(appVersion, commitSha.trim());
   await GitHub.uploadBuildAsync(appVersion, tmpTarGzPath, assetName);
 
