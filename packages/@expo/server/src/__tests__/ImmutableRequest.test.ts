@@ -56,7 +56,7 @@ describe(ImmutableRequest, () => {
       expectError(() => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const body = immutableRequest.body;
-      })
+      });
     });
 
     it('should block text() method', async () => {

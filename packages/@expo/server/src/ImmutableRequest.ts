@@ -26,19 +26,12 @@ class ImmutableHeaders extends Headers {
   }
 }
 
-type _ImmutableRequest = Omit<Request,
-  | 'body'
-  | 'bodyUsed'
-  | 'arrayBuffer'
-  | 'blob'
-  | 'formData'
-  | 'json'
-  | 'text'
-  | 'bytes'
-  | 'headers'
+type _ImmutableRequest = Omit<
+  Request,
+  'body' | 'bodyUsed' | 'arrayBuffer' | 'blob' | 'formData' | 'json' | 'text' | 'bytes' | 'headers'
 > & {
   headers: ImmutableHeaders;
-}
+};
 
 /**
  * An immutable version of the Fetch API's [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object which prevents mutations to the request body and headers.
@@ -120,6 +113,7 @@ export class ImmutableRequest implements _ImmutableRequest {
    * The request body is not accessible in immutable requests.
    */
   // @ts-expect-error This ensures JavaScript users cannot mutate the request body
+  // eslint-disable-next-line getter-return
   get body() {
     this.#throwImmutableBodyError();
   }

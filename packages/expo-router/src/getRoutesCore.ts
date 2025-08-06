@@ -107,20 +107,21 @@ export function getRoutes(contextModule: RequireContext, options: Options): Rout
  */
 function getMiddleware(contextModule: RequireContext, options: Options): MiddlewareNode | null {
   const allMiddlewareFiles = contextModule.keys().filter((key) => key.includes('+middleware'));
-  
+
   // Check if middleware is enabled via plugin config
   if (!options.unstable_useServerMiddleware) {
     if (allMiddlewareFiles.length > 0) {
       console.warn(
-        '[Expo Router] Server middleware detected but not enabled.\n' +
-        'To use server middleware, update your app.json:\n\n' +
-        JSON.stringify({
-          expo: {
-            plugins: [
-              ["expo-router", { unstable_useServerMiddleware: true }]
-            ]
-          }
-        }, null, 2)
+        'Server middleware is not enabled. Add unstable_useServerMiddleware: true to your `expo-router` plugin config.\n\n' +
+          JSON.stringify(
+            {
+              expo: {
+                plugins: [['expo-router', { unstable_useServerMiddleware: true }]],
+              },
+            },
+            null,
+            2
+          )
       );
     }
     return null;

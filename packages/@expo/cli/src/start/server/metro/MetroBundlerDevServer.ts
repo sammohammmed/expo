@@ -55,7 +55,11 @@ import {
 } from './router';
 import { serializeHtmlWithAssets } from './serializeHtml';
 import { observeAnyFileChanges, observeFileChanges } from './waitForMetroToObserveTypeScriptFile';
-import { BundleAssetWithFileHashes, ExportAssetMap } from '../../../export/saveAssets';
+import {
+  BundleAssetWithFileHashes,
+  ExportAssetDescriptor,
+  ExportAssetMap,
+} from '../../../export/saveAssets';
 import { Log } from '../../../log';
 import { env } from '../../../utils/env';
 import { CommandError } from '../../../utils/errors';
@@ -158,13 +162,14 @@ export class MetroBundlerDevServer extends BundlerDevServer {
     artifactFilename,
     files,
     includeSourceMaps,
-    routeId,
+    descriptor,
   }: {
     contents: { src: string; map?: any } | null | undefined;
     artifactFilename: string;
     files: ExportAssetMap;
     includeSourceMaps?: boolean;
     routeId?: string;
+    descriptor: Partial<ExportAssetDescriptor>;
   }) {
     if (!contents) return;
 
@@ -177,6 +182,7 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       src = src.replace(/\/\/# sourceMappingURL=.*/g, `//# sourceMappingURL=${artifactBasename}`);
       const parsedMap = typeof contents.map === 'string' ? JSON.parse(contents.map) : contents.map;
       const mapData: any = {
+        ...descriptor,
         contents: JSON.stringify({
           version: parsedMap.version,
           sources: parsedMap.sources.map((source: string) => {
@@ -192,18 +198,13 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         }),
         targetDomain: 'server',
       };
-      if (routeId) {
-        mapData.apiRouteId = routeId;
-      }
       files.set(artifactFilename + '.map', mapData);
     }
-    const fileData: any = {
+    const fileData: ExportAssetDescriptor = {
+      ...descriptor,
       contents: src,
       targetDomain: 'server',
     };
-    if (routeId) {
-      fileData.apiRouteId = routeId;
-    }
     files.set(artifactFilename, fileData);
   }
 
@@ -224,12 +225,12 @@ export class MetroBundlerDevServer extends BundlerDevServer {
   }) {
     if (!manifest.middleware) return;
 
-    const middlewareFilepath = path.isAbsolute(manifest.middleware.file)
+    const middlewareFilePath = path.isAbsolute(manifest.middleware.file)
       ? manifest.middleware.file
       : path.join(appDir, manifest.middleware.file);
-    const contents = await this.bundleApiRoute(middlewareFilepath, { platform });
+    const contents = await this.bundleApiRoute(middlewareFilePath, { platform });
     const artifactFilename = convertPathToModuleSpecifier(
-      path.join(outputDir, path.relative(appDir, middlewareFilepath.replace(/\.[tj]sx?$/, '.js')))
+      path.join(outputDir, path.relative(appDir, middlewareFilePath.replace(/\.[tj]sx?$/, '.js')))
     );
 
     await this.exportServerRoute({
@@ -237,6 +238,9 @@ export class MetroBundlerDevServer extends BundlerDevServer {
       artifactFilename,
       files,
       includeSourceMaps,
+      descriptor: {
+        middlewareId: '/middleware',
+      },
     });
 
     // Remap the middleware file to represent the output file.
@@ -310,7 +314,9 @@ export class MetroBundlerDevServer extends BundlerDevServer {
         artifactFilename,
         files,
         includeSourceMaps,
-        routeId: route.page,
+        descriptor: {
+          apiRouteId: route.page,
+        },
       });
       // Remap the manifest files to represent the output files.
       route.file = artifactFilename;

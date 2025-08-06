@@ -42,14 +42,11 @@ function getMiddleware(contextModule, options) {
     // Check if middleware is enabled via plugin config
     if (!options.unstable_useServerMiddleware) {
         if (allMiddlewareFiles.length > 0) {
-            console.warn('[Expo Router] Server middleware detected but not enabled.\n' +
-                'To use server middleware, update your app.json:\n\n' +
+            console.warn('Server middleware is not enabled. Add unstable_useServerMiddleware: true to your `expo-router` plugin config.\n\n' +
                 JSON.stringify({
                     expo: {
-                        plugins: [
-                            ["expo-router", { unstable_useServerMiddleware: true }]
-                        ]
-                    }
+                        plugins: [['expo-router', { unstable_useServerMiddleware: true }]],
+                    },
                 }, null, 2));
         }
         return null;

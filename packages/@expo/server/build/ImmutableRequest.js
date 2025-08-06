@@ -87,6 +87,7 @@ class ImmutableRequest {
      * The request body is not accessible in immutable requests.
      */
     // @ts-expect-error This ensures JavaScript users cannot mutate the request body
+    // eslint-disable-next-line getter-return
     get body() {
         this.#throwImmutableBodyError();
     }
