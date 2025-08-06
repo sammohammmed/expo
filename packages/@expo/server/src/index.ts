@@ -8,6 +8,7 @@ import type {
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { ImmutableRequest } from './ImmutableRequest';
 import { ExpoRouterServerManifestV1FunctionRoute } from './types';
 
 const debug =
@@ -136,7 +137,8 @@ export function createRequestHandler(
         if (shouldRunMiddleware(request, routesManifest.middleware)) {
           const middlewareModule = await getMiddleware(routesManifest.middleware);
           if (middlewareModule?.default) {
-            const middlewareResponse = await middlewareModule.default(request);
+            const shallowRequest = new ImmutableRequest(request);
+            const middlewareResponse = await middlewareModule.default(shallowRequest);
             if (middlewareResponse instanceof Response) {
               debug('Middleware returned response, short-circuiting');
               return middlewareResponse;

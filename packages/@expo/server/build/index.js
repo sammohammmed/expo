@@ -8,6 +8,7 @@ exports.createRequestHandler = createRequestHandler;
 require("./install");
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
+const ImmutableRequest_1 = require("./ImmutableRequest");
 const debug = process.env.NODE_ENV === 'development'
     ? require('debug')('expo:server')
     : () => { };
@@ -104,7 +105,8 @@ function createRequestHandler(distFolder, { getRoutesManifest: getInternalRoutes
                 if (shouldRunMiddleware(request, routesManifest.middleware)) {
                     const middlewareModule = await getMiddleware(routesManifest.middleware);
                     if (middlewareModule?.default) {
-                        const middlewareResponse = await middlewareModule.default(request);
+                        const shallowRequest = new ImmutableRequest_1.ImmutableRequest(request);
+                        const middlewareResponse = await middlewareModule.default(shallowRequest);
                         if (middlewareResponse instanceof Response) {
                             debug('Middleware returned response, short-circuiting');
                             return middlewareResponse;
