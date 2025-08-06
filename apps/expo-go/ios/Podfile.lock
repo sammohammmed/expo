@@ -2560,7 +2560,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-slider (4.5.7):
+  - react-native-slider (5.0.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2578,7 +2578,7 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-slider/common (= 4.5.7)
+    - react-native-slider/common (= 5.0.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2589,7 +2589,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-slider/common (4.5.7):
+  - react-native-slider/common (5.0.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -4319,7 +4319,6 @@ SPEC CHECKSUMS:
   EXAV: 0809cbb31eba2111d5413f2dbb547ba9727478ee
   EXConstants: 72e8e04dc4d7d97c74a618d44753ea4a7437a2b6
   EXImageLoader: d2b81b29509ee86ad8bdf0d2cc9ff5d86051d68b
-  EXImageLoader: d2b81b29509ee86ad8bdf0d2cc9ff5d86051d68b
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
   EXManifests: bf76658edfbfa3e3fb67f940ade98d7803490789
   EXNotifications: f0f1c97d04f06c51ea073d7b2396431e5611c1ea
@@ -4399,7 +4398,7 @@ SPEC CHECKSUMS:
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleMaps: b58e9627004f47043897eeae830c3ef023678f3b
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
-  hermes-engine: 261d5b1bb5c97bf83c1232a4bdbb5124eea14cb9
+  hermes-engine: 78c48f2a4d740ac171d2b44f4b6da04dbe844eca
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
@@ -4452,7 +4451,7 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: 5d8c627bc6296d018625948364c1a02d50d11bd4
   react-native-segmented-control: 44d14c6899ee12de3384517f4fa1cf4a66ae105c
   react-native-skia: e4a1edd09e2e7bd95956683673ac18f911d63cfb
-  react-native-slider: fe0add239ded49237c81fe25f3ad84adb3ce49c7
+  react-native-slider: 95b11a80deb9ad503b01debf1a6c71f9ba6485b9
   react-native-view-shot: aac285cd08144be29c19ab659930172836f0067f
   react-native-webview: 183e0d1f10b3c61c5ddd70f4ecd46488856a3573
   React-NativeModulesApple: 009989614b0619613138091469ae3bce6e4641ba
