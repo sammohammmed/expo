@@ -1,55 +1,258 @@
-/*
-  HOW TO USE THIS FILE:
-  1) Copy this file to .vscode/launch.json (remove the .example extension).
-  2) Replace path names based on your local file structure.
-  3) Launch the debugger by clicking the "Debug" icon in the sidebar and selecting the config you want to run.
-*/
-{
-  "configurations": [
-    {
-      // Debug the currently-open Jest test file
-      "name": "Launch Jest for Current File",
-      "request": "launch",
-      "runtimeExecutable": "yarn",
-      "runtimeArgs": [
-        // args to pass to yarn, e.g., `yarn jest --runInBand`
-        "jest",
-        "--runInBand",
-        /*
-        Filter tests run by filename
-        ${fileBasenameNoExtension} will filter by the name of the file in the current tab
-        change this to a hardcoded name to always filter by a specific file, or remove to run all tests
-      */
-        "${fileBasenameNoExtension}"
-      ],
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node",
-      // replace with the path to the Expo CLI package in your local checkout
-      "cwd": "/Users/username/path-to/expo/packages/@expo/cli",
-      "console": "integratedTerminal"
-    },
-    {
-      /*
-      Debug the Expo CLI when it is running against a test project.
-      Starting the debugger with this config will start your locally-built Expo CLI,
-      but with it's CWD as a test project of your choice.
-      Be sure to run `yarn build` in expo/packages/@expo/cli first.
-    */
-      "name": "Launch Expo CLI",
-      "request": "launch",
-      "args": [
-        /*
-        Replace with the command args you want to pass to the Expo CLI,
-        e.g., `start` will run the equivablent of `npx expo start`
-      */
-        "start"
-      ],
-      "program": "${workspaceFolder}/packages/@expo/cli/build/bin/cli",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node",
-      // Replace with the root directory of your test project you want to run the Expo CLI against.
-      "cwd": "/Users/username/path-to/test-project",
-      "console": "integratedTerminal"
-    }
-  ]
+// main.dart
+/*************************************************************************************************
+* SAMMEDLAB - Unified Final Application Code
+* Version: 8.0 (Flutter Native - Unified Architecture)
+*
+* Description:
+* This Flutter code represents the complete, unified application, combining both the
+* SAMMEDLAB reference portal and the SAMLIMS lab management system into a single app.
+* It includes a navigation structure to switch between the public-facing reference
+* and the private LIMS dashboard (which would be protected by a login screen).
+*
+* Instructions for the Developer:
+* 1. This is the main entry point (`main.dart`) for the unified application.
+* 2. The code is structured into separate "screen" widgets for clarity (e.g.,
+* ReferenceScreen, LimsDashboardScreen). In a large project, these would be in separate files.
+* 3. A BottomNavigationBar is used for top-level navigation between the two main parts of the app.
+* 4. The LIMS part is a placeholder and should be placed behind an authentication guard.
+* 5. All backend logic (database connections, API calls for SAMGIMS, payment processing)
+* needs to be implemented. This code provides the complete UI/UX foundation.
+*************************************************************************************************/
+
+import 'package:flutter/material.dart';
+
+// --- Main App Entry Point ---
+void main() {
+  runApp(const UnifiedSamMedLabApp());
+}
+
+class UnifiedSamMedLabApp extends StatelessWidget {
+  const UnifiedSamMedLabApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SAMMEDLAB',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        fontFamily: 'Cairo',
+        scaffoldBackgroundColor: const Color(0xFFF4F7FC),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          iconTheme: IconThemeData(color: Color(0xFF1A237E)),
+          titleTextStyle: TextStyle(
+              color: Color(0xFF0F766E),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo'),
+        ),
+      ),
+      debugShowCheckedModeBanner: false,
+      home: const MainNavigator(),
+    );
+  }
+}
+
+// --- Main Navigator with Bottom Navigation Bar ---
+class MainNavigator extends StatefulWidget {
+  const MainNavigator({super.key});
+
+  @override
+  State<MainNavigator> createState() => _MainNavigatorState();
+}
+
+class _MainNavigatorState extends State<MainNavigator> {
+  int _selectedIndex = 0;
+
+  static const List<Widget> _widgetOptions = <Widget>[
+    SamMedLabReferenceScreen(), // The public reference app
+    SamLimsDashboardScreen(),   // The private LIMS dashboard
+  ];
+
+  void _onItemTapped(int index) {
+    // In a real app, you'd check for login status before navigating to index 1
+    // For now, it's a direct navigation
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book_outlined),
+            label: 'المرجع الطبي',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            label: 'إدارة المختبر (LIMS)',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.teal[800],
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+
+// --- SCREEN 1: SAMMEDLAB Reference Portal ---
+class SamMedLabReferenceScreen extends StatefulWidget {
+  const SamMedLabReferenceScreen({super.key});
+  @override
+  State<SamMedLabReferenceScreen> createState() => _SamMedLabReferenceScreenState();
+}
+
+class _SamMedLabReferenceScreenState extends State<SamMedLabReferenceScreen> {
+  // All state and logic for the reference app (search, filters, etc.) goes here.
+  // This is a simplified version for demonstration.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+         title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.teal,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.science_outlined, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 10),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('SAMMEDLAB'),
+                  Text('مرجع الفحوصات الطبي الذكي', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                ],
+              ),
+            ],
+          ),
+        actions: [
+            IconButton(
+              icon: const Icon(Icons.shopping_cart_outlined, color: Colors.green),
+              tooltip: 'SAMSHOPPING',
+              onPressed: () { /* Show SAMSHOPPING Modal */ },
+            ),
+            IconButton(
+              icon: const Icon(Icons.auto_awesome_outlined, color: Colors.teal),
+              tooltip: 'SAMGIMS',
+              onPressed: () { /* Show SAMGIMS Modal */ },
+            ),
+            IconButton(
+              icon: const Icon(Icons.school_outlined, color: Colors.blueGrey),
+              tooltip: 'SAMGARD',
+              onPressed: () { /* Show SAMGARD Modal */ },
+            ),
+        ],
+      ),
+      body: const Center(
+        child: Text('هنا ستكون واجهة المرجع الطبي التفاعلية', style: TextStyle(fontSize: 18)),
+      ),
+    );
+  }
+}
+
+
+// --- SCREEN 2: SAMLIMS Dashboard ---
+class SamLimsDashboardScreen extends StatelessWidget {
+  const SamLimsDashboardScreen({super.key});
+  
+  // This is the dashboard UI we designed previously.
+  // In a real app, this screen would be protected by a login check.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('نظام إدارة المختبر (SAMLIMS)'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // Header Cards
+          Row(
+            children: [
+              Expanded(child: _buildInfoCard("المرضى اليوم", "12", Icons.people_outline, Colors.blue)),
+              const SizedBox(width: 16),
+              Expanded(child: _buildInfoCard("الفحوصات المنجزة", "45", Icons.check_circle_outline, Colors.green)),
+              const SizedBox(width: 16),
+              Expanded(child: _buildInfoCard("قيد التنفيذ", "8", Icons.hourglass_top_outlined, Colors.orange)),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Main Modules Grid
+          const Text("الوحدات الرئيسية", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 3,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildModuleCard("إدارة المرضى", Icons.person_add_alt_1_outlined, Colors.indigo),
+              _buildModuleCard("إدارة الفحوصات", Icons.biotech_outlined, Colors.teal),
+              _buildModuleCard("إدارة المخزون", Icons.inventory_2_outlined, Colors.redAccent),
+              _buildModuleCard("الفواتير والدفع", Icons.receipt_long_outlined, Colors.purple),
+              _buildModuleCard("ضبط الجودة", Icons.verified_user_outlined, Colors.amber.shade700),
+              _buildModuleCard("التقارير", Icons.analytics_outlined, Colors.cyan),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widgets for the dashboard UI
+  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(color: Colors.black54, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModuleCard(String title, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: color,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: Colors.white),
+            const SizedBox(height: 12),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
 }
